@@ -1,0 +1,28 @@
+flowchart TD
+    PM["Product Manager<br/>states an idea"] --> LEDGER{{"Ledger<br/>(Orchestrator Agent)"}}
+
+    LEDGER <--> SPECIALISTS
+
+    subgraph SPECIALISTS["Specialist Agents — consulted per stage"]
+        direction LR
+        RES["Research<br/>market grounding"]
+        DES["Design<br/>prototype / UX"]
+        DAT["Data<br/>financial modeling"]
+        STR["Strategy<br/>GTM & positioning"]
+        PIT["Pitch<br/>leadership synthesis"]
+    end
+
+    LEDGER --> STAGE
+
+    subgraph STAGE["Stage Progression"]
+        direction LR
+        S1["01 Concept"] --> S2["02 Validate"] --> S3["03 Prototype"] --> S4["04 GTM"] --> S5["05 Pitch"]
+    end
+
+    MODE{"Rigor Mode"} -->|"Exploratory: flagged estimates OK"| LEDGER
+    MODE -->|"Board-Ready: no unsourced numbers"| LEDGER
+
+    LEDGER --> LOG[("Evidence Ledger<br/>claim · type · confidence % · risk % · source")]
+
+    STAGE --> OUT["Validated concept +<br/>full evidence trail"]
+    LOG --> OUT
