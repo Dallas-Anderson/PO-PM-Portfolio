@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>SSBCI case manager workspace</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #000;
+         margin: 0; padding: 24px; }
+  .frame-label { font-size: 11px; color: #666; text-transform: uppercase;
+                 letter-spacing: 0.05em; margin-bottom: 4px; }
+  h1 { font-size: 18px; font-weight: bold; margin: 0 0 4px 0; }
+  .subtitle { font-size: 12px; color: #666; margin-bottom: 20px; }
+  .box { border: 1px solid #000; padding: 12px; margin-bottom: 12px; background: #f5f5f5; }
+  .box-header { font-weight: bold; font-size: 13px; margin-bottom: 8px;
+                border-bottom: 1px solid #999; padding-bottom: 4px; }
+  .placeholder-block { border: 1px dashed #999; background: #eee; height: 14px;
+                        margin: 4px 0; }
+  .nav { border: 1px solid #000; padding: 8px 12px; margin-bottom: 16px;
+         font-size: 12px; background: #ddd; display: flex; gap: 16px; }
+  .nav span { border: 1px solid #999; padding: 2px 8px; background: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; }
+  th { background: #ddd; font-weight: bold; }
+  .tag { display: inline-block; border: 1px solid #666; padding: 1px 6px;
+         font-size: 10px; background: #fff; }
+  .tag-pending { background: #eee; }
+  .tag-active, .tag-fulfilled, .tag-approved { background: #ccc; }
+  .btn { display: inline-block; border: 1px solid #000; padding: 4px 10px;
+         font-size: 12px; background: #ddd; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .footer-note { font-size: 10px; color: #999; margin-top: 24px; border-top: 1px solid #ccc;
+                 padding-top: 8px; }
+</style>
+</head>
+<body>
+<div class="frame-label">Low-fi wireframe - layout only</div>
+<div class="nav"><span>Member portal</span><span>Case management</span><span>Vendor network</span><span>Compliance</span></div>
+<h1>SSBCI case manager workspace</h1>
+<div class="subtitle">Lane 2 targeted chronic-illness benefits &nbsp;|&nbsp; Backlog: F002</div>
+
+<div class="box">
+  <div class="box-header">SSBCI eligibility assessment</div>
+  <div class="placeholder-block" style="width:60%"></div>
+  <div class="placeholder-block" style="width:40%"></div>
+  <span class="btn">New assessment</span>
+</div>
+<div class="box">
+  <div class="box-header">Targeted benefit requests</div>
+  <table><tr><th>Member</th><th>Service</th><th>Justification</th><th>CMS status</th><th>Fulfillment</th><th>Vendor</th></tr><tr>
+      <td>Dorothy Klein</td>
+      <td>Home modification (grab bars, ramp)</td>
+      <td style="max-width:220px">Fall risk with COPD; reduces hospitalization risk</td>
+      <td><span class="tag tag-approved">CMS approved</span></td>
+      <td><span class="tag tag-assigned">Assigned</span></td>
+      <td>V02</td>
+    </tr><tr>
+      <td>Alice Meyer</td>
+      <td>Meal delivery</td>
+      <td style="max-width:220px">Diabetes management; supports diet adherence</td>
+      <td><span class="tag tag-approved">CMS approved</span></td>
+      <td><span class="tag tag-fulfilled">Fulfilled</span></td>
+      <td>V01</td>
+    </tr><tr>
+      <td>Ruth Palmer</td>
+      <td>Non-medical transportation (grocery)</td>
+      <td style="max-width:220px">CHF; limited mobility, lives alone</td>
+      <td><span class="tag tag-pending">Pending CMS</span></td>
+      <td><span class="tag tag-pending">Pending</span></td>
+      <td>-</td>
+    </tr><tr>
+      <td>Dorothy Klein</td>
+      <td>Pest control</td>
+      <td style="max-width:220px">Asthma trigger reduction</td>
+      <td><span class="tag tag-approved">CMS approved</span></td>
+      <td><span class="tag tag-pending">Pending</span></td>
+      <td>V03</td>
+    </tr></table>
+</div>
+
+<div class="footer-note">Wireframe generated from coop_health.db - Morgan County co-op MA pilot dataset. Structure/layout only, not final visual design.</div>
+</body></html>

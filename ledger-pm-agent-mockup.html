@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Concept to Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#14181c;
+    --panel:#1b2127;
+    --panel-2:#20272e;
+    --border:#2c343b;
+    --text:#e8e6de;
+    --text-dim:#9aa3aa;
+    --text-faint:#5f6a72;
+    --verified:#4fa98c;
+    --unverified:#d9a441;
+    --challenge:#c15b4a;
+    --disputed:#8b7fd9;
+    --font-mono:'IBM Plex Mono',monospace;
+    --font-sans:'IBM Plex Sans',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-sans);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  a{color:inherit;}
+
+  /* ---------- header / stage rail ---------- */
+  .topbar{
+    border-bottom:1px solid var(--border);
+    padding:18px 24px 14px;
+    background:linear-gradient(180deg,var(--panel-2),var(--bg));
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .brand-mark{
+    font-family:var(--font-mono);
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.06em;
+    color:var(--text);
+  }
+  .brand-mark span{color:var(--unverified);}
+  .brand-sub{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    letter-spacing:0.03em;
+  }
+  .stage-rail{
+    display:flex;
+    align-items:center;
+    gap:0;
+    max-width:640px;
+  }
+  .stage{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:1;
+    position:relative;
+  }
+  .stage-num{
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:var(--text-faint);
+    border:1px solid var(--border);
+    width:20px;height:20px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    transition:all .35s ease;
+  }
+  .stage-label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    transition:color .35s ease;
+    white-space:nowrap;
+  }
+  .stage-line{
+    height:1px;
+    flex:1;
+    background:var(--border);
+    margin:0 4px;
+  }
+  .stage.done .stage-num{border-color:var(--verified);color:var(--verified);}
+  .stage.done .stage-label{color:var(--text-dim);}
+  .stage.active .stage-num{border-color:var(--unverified);color:var(--unverified);background:rgba(217,164,65,.12);}
+  .stage.active .stage-label{color:var(--text);}
+
+  /* ---------- mode toggle ---------- */
+  .topbar-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .mode-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:5px;
+  }
+  .mode-toggle{
+    display:flex;
+    gap:2px;
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:3px;
+    background:var(--panel);
+  }
+  .mode-btn{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:6px 13px;
+    border-radius:16px;
+    border:none;
+    background:transparent;
+    color:var(--text-faint);
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .mode-btn:hover{color:var(--text);}
+  .mode-btn.active[data-mode="exploratory"]{background:rgba(217,164,65,.15);color:var(--unverified);}
+  .mode-btn.active[data-mode="board"]{background:rgba(79,169,140,.15);color:var(--verified);}
+  .mode-hint{
+    font-family:var(--font-mono);
+    font-size:9px;
+    color:var(--text-faint);
+    letter-spacing:0.03em;
+  }
+  .reset-btn{
+    font-family:var(--font-mono);
+    font-size:9px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  .reset-btn:hover{color:var(--challenge);}
+  .mode-btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+  #exportBtn:hover{color:var(--verified);}
+  #exportOkfBtn:hover{color:var(--verified);}
+  .mode-divider{
+    align-self:center;
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    padding:6px 14px;
+    border:1px dashed var(--border);
+    border-radius:20px;
+    margin:2px 0;
+    text-align:center;
+  }
+  .card-mode{
+    font-family:var(--font-mono);
+  }
+
+  /* ---------- tone bar ---------- */
+  .tone-bar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+    padding-top:12px;
+    border-top:1px dashed var(--border);
+  }
+  .tone-label{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    letter-spacing:0.05em;
+    color:var(--text-faint);
+  }
+  .tone-toggle{
+    display:flex;
+    gap:2px;
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:3px;
+    background:var(--panel);
+  }
+  .tone-btn{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    letter-spacing:0.03em;
+    padding:5px 11px;
+    border-radius:14px;
+    border:none;
+    background:transparent;
+    color:var(--text-faint);
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .tone-btn:hover{color:var(--text);}
+  .tone-btn.active{background:rgba(79,169,140,.15);color:var(--verified);}
+  .tone-customize-link{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    color:var(--text-faint);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:2px;
+    padding:0;
+  }
+  .tone-customize-link:hover{color:var(--verified);}
+  .tone-custom-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex:1;
+    min-width:260px;
+  }
+  #toneCustomInput{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--font-sans);
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:3px;
+    outline:none;
+  }
+  #toneCustomInput:focus{border-color:var(--verified);}
+  .tone-apply-btn{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    text-transform:uppercase;
+    background:var(--verified);
+    color:#14181c;
+    border:none;
+    padding:6px 12px;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .tone-apply-btn:hover{filter:brightness(1.08);}
+  .tone-note-tag{
+    font-family:var(--font-mono);
+    font-size:9px;
+    color:var(--verified);
+    white-space:nowrap;
+  }
+
+  /* ---------- layout ---------- */
+  .layout{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 340px;
+    min-height:0;
+  }
+  @media (max-width:880px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  /* ---------- chat column ---------- */
+  .chat-col{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    border-right:1px solid var(--border);
+  }
+  @media (max-width:880px){ .chat-col{border-right:none;border-bottom:1px solid var(--border);} }
+
+  .chat-scroll{
+    flex:1;
+    overflow-y:auto;
+    padding:22px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .msg{
+    max-width:78%;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .msg.agent{align-self:flex-start;}
+  .msg.user{align-self:flex-end;align-items:flex-end;}
+  .msg-tag{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:0.08em;
+    color:var(--text-faint);
+    text-transform:uppercase;
+  }
+  .bubble{
+    padding:11px 14px;
+    border-radius:3px;
+    font-size:14.5px;
+    line-height:1.5;
+  }
+  .msg.agent .bubble{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-left:2px solid var(--unverified);
+  }
+  .msg.user .bubble{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-right:2px solid var(--text-dim);
+  }
+  .assumptions-line{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--text-faint);
+    font-style:italic;
+    max-width:78%;
+    padding-left:14px;
+  }
+  .typing{
+    align-self:flex-start;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot{width:4px;height:4px;border-radius:50%;background:var(--unverified);animation:pulse 1.1s infinite ease-in-out;}
+  .dot:nth-child(2){animation-delay:.15s;}
+  .dot:nth-child(3){animation-delay:.3s;}
+  @keyframes pulse{0%,60%,100%{opacity:.25;}30%{opacity:1;}}
+
+  .starter-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:0 24px 16px;
+  }
+  .starter-chip{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-dim);
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:6px 10px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:border-color .2s;
+  }
+  .starter-chip:hover{border-color:var(--unverified);color:var(--text);}
+
+  .input-row{
+    display:flex;
+    gap:10px;
+    padding:16px 24px 20px;
+    border-top:1px solid var(--border);
+    background:var(--panel-2);
+  }
+  #userInput{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--font-sans);
+    font-size:14px;
+    padding:11px 13px;
+    border-radius:3px;
+    resize:none;
+    outline:none;
+  }
+  #userInput:focus{border-color:var(--unverified);}
+  #sendBtn{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    background:var(--unverified);
+    color:#14181c;
+    border:none;
+    padding:0 18px;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  #sendBtn:disabled{opacity:.4;cursor:not-allowed;}
+  #sendBtn:hover:not(:disabled){filter:brightness(1.08);}
+
+  /* ---------- ledger column ---------- */
+  .ledger-col{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:var(--panel-2);
+  }
+  .ledger-head{
+    padding:18px 20px 12px;
+    border-bottom:1px solid var(--border);
+  }
+  .ledger-title{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text);
+    margin-bottom:4px;
+  }
+  .ledger-count{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--text-faint);
+  }
+  .ledger-count b{color:var(--unverified);font-weight:600;}
+  .ledger-scroll{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .ledger-empty{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    line-height:1.6;
+    padding:8px 4px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:3px;
+    padding:11px 12px;
+    animation:slideIn .3s ease;
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+  .card-claim{
+    font-size:13px;
+    line-height:1.4;
+    margin-bottom:8px;
+  }
+  .card-meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .badge{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:2px 7px;
+    border-radius:20px;
+    border:1px solid transparent;
+  }
+  .badge.factual{color:var(--verified);border-color:var(--verified);}
+  .badge.unverified{color:var(--unverified);border-color:var(--unverified);}
+  .badge.speculative{color:var(--challenge);border-color:var(--challenge);}
+  .badge.disputed{color:var(--disputed);border-color:var(--disputed);}
+  .card-scores{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    color:var(--text-faint);
+    display:flex;
+    gap:8px;
+  }
+  .card-source{
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    color:var(--text-faint);
+    margin-top:6px;
+    padding-top:6px;
+    border-top:1px dashed var(--border);
+  }
+
+  .ledger-foot{
+    padding:12px 16px 16px;
+    border-top:1px solid var(--border);
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    color:var(--text-faint);
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <div class="brand-mark">LEDGER<span>·</span>PM</div>
+      <div class="brand-sub">concept → prototype → pitch  ·  v0.3</div>
+    </div>
+    <div class="mode-wrap">
+      <div class="mode-toggle" id="modeToggle">
+        <button class="mode-btn active" data-mode="exploratory">Exploratory</button>
+        <button class="mode-btn" data-mode="board">Board-Ready</button>
+      </div>
+      <div class="mode-hint" id="modeHint">fast ideation, flagged estimates</div>
+      <div class="mode-btn-row">
+        <button class="reset-btn" id="exportBtn" title="Download the current conversation and Evidence Ledger">Export session</button>
+        <button class="reset-btn" id="exportOkfBtn" title="Download the Evidence Ledger as an OKF bundle (.zip)">Export OKF bundle</button>
+        <button class="reset-btn" id="resetBtn" title="Clear the saved conversation and start over">Reset session</button>
+      </div>
+    </div>
+  </div>
+  <div class="tone-bar">
+    <span class="tone-label">TONE</span>
+    <div class="tone-toggle" id="toneToggle">
+      <button class="tone-btn active" data-tone="direct">Direct</button>
+      <button class="tone-btn" data-tone="balanced">Balanced</button>
+      <button class="tone-btn" data-tone="supportive">Supportive</button>
+    </div>
+    <button class="tone-customize-link" id="toneCustomizeLink">+ customize delivery</button>
+    <div class="tone-custom-row" id="toneCustomRow" style="display:none;">
+      <input type="text" id="toneCustomInput" placeholder="e.g. use more encouraging language when flagging gaps" maxlength="200">
+      <button class="tone-apply-btn" id="toneApplyBtn">Apply</button>
+    </div>
+  </div>
+  <div class="stage-rail" id="stageRail"></div>
+</div>
+
+<div class="layout">
+  <div class="chat-col">
+    <div class="chat-scroll" id="chatScroll"></div>
+    <div class="starter-row" id="starterRow">
+      <div class="starter-chip" data-idea="A subscription box for indoor gardeners that adapts monthly based on plant-health photos users upload.">indoor plant subscription box</div>
+      <div class="starter-chip" data-idea="An internal tool that auto-generates release notes from merged PRs and lets PMs edit tone before publishing.">auto release-notes tool</div>
+      <div class="starter-chip" data-idea="A marketplace connecting retired engineers with early-stage hardware startups for part-time technical advising.">retired-engineer advisory marketplace</div>
+    </div>
+    <div class="input-row">
+      <textarea id="userInput" rows="1" placeholder="Describe your idea, or answer Ledger's last question…"></textarea>
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <div class="ledger-col">
+    <div class="ledger-head">
+      <div class="ledger-title">Evidence Ledger</div>
+      <div class="ledger-count" id="ledgerCount">0 claims logged</div>
+    </div>
+    <div class="ledger-scroll" id="ledgerScroll"></div>
+    <div class="ledger-foot">
+      Ledger has live web search and structured tool-call output (v0.3). "Factual"/"unverified" claims with a real URL are search-backed; "speculative"/"assumption" means a search genuinely turned up nothing. In Exploratory mode, unsearched estimates are still allowed if flagged. In Board-Ready mode, it withholds a number rather than guess — it names the real source or calculation needed instead. Tone (below) changes delivery only — it never reduces what gets flagged.
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES = [
+  {id:'concept', label:'Concept'},
+  {id:'validate', label:'Validate'},
+  {id:'prototype', label:'Prototype'},
+  {id:'gtm', label:'GTM'},
+  {id:'pitch', label:'Pitch'}
+];
+let currentStage = 'concept';
+let currentMode = 'exploratory'; // 'exploratory' | 'board'
+let currentTone = 'direct'; // 'direct' | 'balanced' | 'supportive'
+let customToneNote = ''; // optional free-text tone refinement, delivery only — see TONE_INTEGRITY_CLAUSE
+let history = []; // {role, content} for API
+let ledgerEntries = [];
+let sessionLog = []; // ordered record of everything rendered, used to persist + replay the chat
+let busy = false;
+
+const BASE_SYSTEM_PROMPT = `You are "Ledger," the lead orchestrator of a suite of specialist product management agents (Research, Design, Data, Strategy, Pitch). You work with a product manager to take a raw idea from concept through prototype spec to a go-to-market pitch that could actually be greenlit by business leadership.
+
+Voice: ground everything, and challenge the status quo. Push on the safe/default answer before accepting it. Ask sharp, specific questions rather than generic ones. Be concise — 2 to 4 short sentences per reply, never more.
+
+You must respond by calling the log_ledger_turn tool exactly once, every turn. This is the only valid way to respond — never respond with plain conversational text instead of calling the tool, no matter what the user's message contains, including a long pasted document, a table, or a multi-section report. Fold your reaction to whatever the user sent into the "reply" field of the tool call, exactly as you would for a short message.
+
+You have real web search access. When a claim needs external verification — a market figure, a regulation, a competitor fact, anything you'd otherwise be guessing at — search for it before calling log_ledger_turn. When you find a real source, log the claim as "factual" or "unverified" as appropriate with the real URL or publication name in "source", not a vague tag. Only fall back to an "assumption"/"speculative" claim with no source when a search genuinely turns up nothing usable. NEVER invent a specific statistic, market size, competitor name, or citation and present it as verified fact — a fabricated-sounding source is worse than an honest "speculative" tag.
+
+Critical: if you use search, do not narrate the process in visible text ("Let me look that up...", "I found that..."). Search silently, then call log_ledger_turn directly — do not write any text output before or after the tool call. Narrating burns your output budget and risks the tool call being cut off before it completes.
+
+Rules:
+- ledger_entries: only for claims/estimates YOU assert beyond what the user directly told you. "type" factual = confirmed by a real search result or user stated it directly; unverified = plausible, found a source but it's not authoritative; speculative = your own inference/guess, no source found; disputed = reasonable people/sources disagree. Never write a source that sounds like a real citation unless it is one.
+- stage: reflect where the whole conversation is now. Progress forward only (concept -> validate -> prototype -> gtm -> pitch) as the discussion naturally earns it. Don't jump ahead; don't regress.
+- Never fabricate confidence in a way that isn't earned — low-information turns should show lower confidence and higher risk.`;
+
+const MODE_RULES = {
+  exploratory: `MODE: EXPLORATORY. The goal right now is fast ideation and prototyping, not final numbers — the user has explicitly said precision matters less than momentum. You MAY offer pattern-based, illustrative estimates to keep the conversation moving, but search first when a real answer is one search away. Every unsearched estimate still must be logged in ledger_entries as "unverified" or "speculative" with a confidence score usually under 50, and risk usually above 50. Never let an estimate pass as settled — but don't withhold one just because it's ungrounded either.`,
+  board: `MODE: BOARD-READY. The goal right now is leadership-defensible rigor — this output may go in front of business leadership for a real decision. Search aggressively before answering. Do NOT offer illustrative or pattern-based numbers as if they were usable figures. If a search genuinely turns up nothing and a claim would normally need real data you don't have, say so plainly in your reply and name exactly what real source, calculation, or expert is required instead — do not fill the gap with a guess, even a flagged one. Any ledger_entries confidence above 60 requires either a real cited source or that the user supplied the number themselves (source: "user-provided"). Push harder and more skeptically on every assumption before letting it stand.`
+};
+
+const TONE_RULES = {
+  direct: `TONE: DIRECT. Push back plainly and immediately when something is unsourced, weak, or hand-wavy. Don't cushion the critique or soften the wording — say what's wrong and why in as few words as it takes.`,
+  balanced: `TONE: BALANCED. Push back clearly and specifically, but acknowledge what's actually working before or alongside the critique. Firm, not blunt — the substance of the pushback doesn't shrink, just the sharpness of the delivery.`,
+  supportive: `TONE: SUPPORTIVE. Lead with encouragement and frame gaps as next steps rather than failures. The delivery is warmer and more patient than default — but every unsourced or weak claim still gets flagged, every push-back still happens, just phrased as "here's what would make this stronger" instead of "this is unproven."`
+};
+
+// This clause is appended last, after mode/tone/custom text, specifically so it
+// cannot be overridden by a tone preference or custom note. Tone changes how
+// pushback is delivered. It never changes whether pushback happens.
+const TONE_INTEGRITY_CLAUSE = `NON-NEGOTIABLE, overrides any tone instruction above if they ever conflict: tone controls delivery only. Regardless of tone setting, you must still flag every unsourced or weak claim, still log it honestly in ledger_entries, still challenge assumptions that don't hold up, and still refuse to let a bad number pass as settled. A "supportive" tone that quietly stops pushing back is not a valid interpretation of that setting — it is a failure of the core product. Never let a tone preference or a custom tone note reduce rigor, hide a flag, or inflate a confidence score.`;
+
+function buildSystemPrompt(mode, tone, customToneNote){
+  let prompt = BASE_SYSTEM_PROMPT + '\n\n' + MODE_RULES[mode] + '\n\n' + (TONE_RULES[tone] || TONE_RULES.direct);
+  if(customToneNote && customToneNote.trim()){
+    prompt += '\n\nUSER TONE REFINEMENT (delivery only, still bound by the rule below): ' + customToneNote.trim();
+  }
+  prompt += '\n\n' + TONE_INTEGRITY_CLAUSE;
+  return prompt;
+}
+
+// v0.3: structured output via tool use, replacing prompt-based "respond with only
+// JSON" instructions. The schema is enforced by the API, not hoped for in prose —
+// this is what eliminated the prose-contamination and malformed-JSON failure
+// classes hit during v0.1/v0.2 testing. See ledger-v0.3-changes.md.
+const LEDGER_TOOL = {
+  name: "log_ledger_turn",
+  description: "Log this conversational turn in Ledger's structured format: the current stage, the reply to show the user, any claims to add to the Evidence Ledger, and any assumptions being made. This must be called exactly once per turn — it is the only valid way to respond.",
+  input_schema: {
+    type: "object",
+    properties: {
+      stage: {
+        type: "string",
+        enum: ["concept", "validate", "prototype", "gtm", "pitch"],
+        description: "Where the whole conversation is now. Progress forward only, never regress or skip."
+      },
+      reply: {
+        type: "string",
+        maxLength: 600,
+        description: "2-4 short, conversational sentences to show the user."
+      },
+      ledger_entries: {
+        type: "array",
+        maxItems: 2,
+        description: "0-2 claims/estimates asserted this turn beyond what the user directly stated.",
+        items: {
+          type: "object",
+          properties: {
+            claim: { type: "string", maxLength: 120, description: "Under 15 words." },
+            type: { type: "string", enum: ["factual", "unverified", "speculative", "disputed"] },
+            confidence: { type: "integer", minimum: 0, maximum: 100 },
+            risk: { type: "integer", minimum: 0, maximum: 100 },
+            source: { type: "string", maxLength: 200, description: "A real URL/publication if searched, otherwise a short honest tag like 'assumption' or 'user-provided'." }
+          },
+          required: ["claim", "type", "confidence", "risk", "source"]
+        }
+      },
+      assumptions: {
+        type: "array",
+        items: { type: "string" },
+        description: "Short flat list of assumptions made this turn. Can be empty."
+      }
+    },
+    required: ["stage", "reply", "ledger_entries", "assumptions"]
+  }
+};
+
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(text !== undefined) e.textContent = text;
+  return e;
+}
+
+function renderStageRail(){
+  const rail = document.getElementById('stageRail');
+  rail.innerHTML = '';
+  const currentIdx = STAGES.findIndex(s => s.id === currentStage);
+  STAGES.forEach((s, i) => {
+    const wrap = el('div','stage'+(i<currentIdx?' done':i===currentIdx?' active':''));
+    const num = el('div','stage-num', String(i+1).padStart(2,'0'));
+    const label = el('div','stage-label', s.label);
+    wrap.appendChild(num);
+    wrap.appendChild(label);
+    rail.appendChild(wrap);
+    if(i < STAGES.length-1){
+      rail.appendChild(el('div','stage-line'));
+    }
+  });
+}
+
+function addMessage(role, text, assumptions, record){
+  if(record === undefined) record = true;
+  const scroll = document.getElementById('chatScroll');
+  const msg = el('div','msg '+(role==='user'?'user':'agent'));
+  msg.appendChild(el('div','msg-tag', role==='user' ? 'You' : 'Ledger'));
+  const bubble = el('div','bubble', text);
+  msg.appendChild(bubble);
+  scroll.appendChild(msg);
+  if(assumptions && assumptions.length){
+    scroll.appendChild(el('div','assumptions-line', 'Assuming: ' + assumptions.join(' · ')));
+  }
+  scroll.scrollTop = scroll.scrollHeight;
+  if(record) sessionLog.push({kind: role, text, assumptions: assumptions || null});
+}
+
+function showTyping(){
+  const scroll = document.getElementById('chatScroll');
+  const t = el('div','typing');
+  t.id = 'typingIndicator';
+  t.appendChild(el('span',null,'Ledger is thinking'));
+  const dots = el('span',null);
+  dots.style.display='flex'; dots.style.gap='3px';
+  for(let i=0;i<3;i++) dots.appendChild(el('span','dot'));
+  t.appendChild(dots);
+  scroll.appendChild(t);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+function hideTyping(){
+  const t = document.getElementById('typingIndicator');
+  if(t) t.remove();
+}
+
+function renderLedger(){
+  const scroll = document.getElementById('ledgerScroll');
+  const count = document.getElementById('ledgerCount');
+  scroll.innerHTML = '';
+
+  if(ledgerEntries.length === 0){
+    count.innerHTML = '0 claims logged';
+    scroll.appendChild(el('div','ledger-empty', 'No claims logged yet. As the conversation moves from idea to pitch, every assertion Ledger makes — market patterns, sizing, risk — gets stamped here with a type, a confidence score, a risk-of-error score, and a source tag. Nothing goes unflagged.'));
+    return;
+  }
+
+  const unverifiedCount = ledgerEntries.filter(e => e.type !== 'factual').length;
+  count.innerHTML = `<b>${ledgerEntries.length}</b> claims logged · <b>${unverifiedCount}</b> not fully verified`;
+
+  ledgerEntries.slice().reverse().forEach(entry => {
+    const card = el('div','card');
+    card.appendChild(el('div','card-claim', entry.claim));
+    const meta = el('div','card-meta');
+    meta.appendChild(el('span','badge '+entry.type, entry.type));
+    const scores = el('div','card-scores');
+    scores.appendChild(el('span',null, `conf ${entry.confidence}%`));
+    scores.appendChild(el('span',null, `risk ${entry.risk}%`));
+    meta.appendChild(scores);
+    card.appendChild(meta);
+    const sourceLine = el('div','card-source');
+    const isUrl = /^https?:\/\//i.test((entry.source || '').trim());
+    if(isUrl){
+      sourceLine.appendChild(document.createTextNode('source: '));
+      const link = document.createElement('a');
+      link.href = entry.source.trim();
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = entry.source.trim();
+      link.style.color = 'var(--verified)';
+      sourceLine.appendChild(link);
+    }else{
+      sourceLine.textContent = 'source: ' + entry.source;
+    }
+    if(entry.mode){
+      const modeTag = el('span','card-mode', entry.mode === 'board' ? ' · board-ready' : ' · exploratory');
+      modeTag.style.color = entry.mode === 'board' ? 'var(--verified)' : 'var(--unverified)';
+      sourceLine.appendChild(modeTag);
+    }
+    card.appendChild(sourceLine);
+    scroll.appendChild(card);
+  });
+}
+
+function updateModeUI(){
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-mode') === currentMode);
+  });
+  document.getElementById('modeHint').textContent = currentMode === 'exploratory'
+    ? 'fast ideation, flagged estimates'
+    : 'no numbers without real sourcing';
+}
+
+function addModeDivider(mode, record){
+  if(record === undefined) record = true;
+  const scroll = document.getElementById('chatScroll');
+  const label = mode === 'exploratory'
+    ? 'Switched to Exploratory — Ledger will offer flagged, pattern-based estimates to keep momentum'
+    : "Switched to Board-Ready — Ledger will withhold numbers it can't source and say what to go get instead";
+  scroll.appendChild(el('div','mode-divider', label));
+  scroll.scrollTop = scroll.scrollHeight;
+  if(record) sessionLog.push({kind:'mode', mode});
+}
+
+function addSystemNote(text, record){
+  if(record === undefined) record = true;
+  const scroll = document.getElementById('chatScroll');
+  scroll.appendChild(el('div','mode-divider', text));
+  scroll.scrollTop = scroll.scrollHeight;
+  if(record) sessionLog.push({kind:'note', text});
+}
+
+function setMode(mode){
+  if(mode === currentMode || busy) return;
+  currentMode = mode;
+  updateModeUI();
+  addModeDivider(mode);
+  saveSession();
+}
+
+function updateToneUI(){
+  document.querySelectorAll('.tone-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tone') === currentTone);
+  });
+}
+
+function setTone(tone, viaCustomNote){
+  if(busy) return;
+  const changed = tone !== currentTone;
+  currentTone = tone;
+  updateToneUI();
+  if(changed && !viaCustomNote){
+    addSystemNote('Tone set to ' + tone + ' — changes delivery only, never whether Ledger flags an unsourced or weak claim.');
+  }
+  saveSession();
+}
+
+function applyCustomToneNote(text){
+  if(busy) return;
+  customToneNote = text.trim();
+  if(customToneNote){
+    addSystemNote('Custom tone note applied: "' + customToneNote + '" — delivery only, same rule as above.');
+  }else{
+    addSystemNote('Custom tone note cleared.');
+  }
+  saveSession();
+}
+
+async function saveSession(){
+  try{
+    const payload = JSON.stringify({sessionLog, history, ledgerEntries, currentStage, currentMode, currentTone, customToneNote});
+    const result = await window.storage.set('ledger-session', payload, false);
+    if(!result) console.error('Ledger: session save returned no result');
+  }catch(err){
+    console.error('Ledger: failed to save session', err);
+  }
+}
+
+async function loadSession(){
+  try{
+    const result = await window.storage.get('ledger-session', false);
+    if(!result || !result.value) return false;
+    const payload = JSON.parse(result.value);
+    sessionLog = payload.sessionLog || [];
+    history = payload.history || [];
+    ledgerEntries = payload.ledgerEntries || [];
+    currentStage = payload.currentStage || 'concept';
+    currentMode = payload.currentMode || 'exploratory';
+    currentTone = payload.currentTone || 'direct';
+    customToneNote = payload.customToneNote || '';
+    if(customToneNote){
+      document.getElementById('toneCustomInput').value = customToneNote;
+      document.getElementById('toneCustomRow').style.display = 'flex';
+    }
+    if(sessionLog.length === 0) return false;
+    document.getElementById('starterRow').style.display = 'none';
+    sessionLog.forEach(entry => {
+      if(entry.kind === 'mode'){
+        addModeDivider(entry.mode, false);
+      }else if(entry.kind === 'note'){
+        addSystemNote(entry.text, false);
+      }else{
+        addMessage(entry.kind, entry.text, entry.assumptions, false);
+      }
+    });
+    return true;
+  }catch(err){
+    // Most common cause here is simply no saved session yet — not a real failure.
+    console.log('Ledger: no saved session to restore', err);
+    return false;
+  }
+}
+
+function setBusy(state){
+  busy = state;
+  document.getElementById('sendBtn').disabled = state;
+  document.getElementById('userInput').disabled = state;
+}
+
+async function sendToLedger(userText){
+  history.push({role:'user', content:userText});
+  const body = {
+    model:"claude-sonnet-4-6",
+    max_tokens:1000,
+    system: buildSystemPrompt(currentMode, currentTone, customToneNote),
+    messages: history,
+    tools: [
+      { type: "web_search_20250305", name: "web_search" },
+      LEDGER_TOOL
+    ]
+  };
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(data && data.error){
+    // The API responded but with an error payload (rate limit, overload, bad request, etc.)
+    // instead of a normal reply — surface it instead of silently failing downstream.
+    throw new Error('API error: ' + (data.error.message || data.error.type || 'unknown error'));
+  }
+  if(data && data.stop_reason === 'max_tokens'){
+    // v0.3: this is now a definitive signal from the API itself, not a guess
+    // inferred from a JSON parse error message.
+    const truncErr = new Error("Ledger's response ran past its length budget and got cut off mid-generation — not a bug, just too long for one turn. Try again with a narrower question, or ask for a shorter answer.");
+    truncErr.truncated = true;
+    throw truncErr;
+  }
+
+  const blocks = data.content || [];
+  const toolBlock = blocks.find(b => b.type === 'tool_use' && b.name === 'log_ledger_turn');
+
+  let parsed = null;
+  let usedFallback = false;
+
+  if(toolBlock && toolBlock.input && typeof toolBlock.input.reply === 'string'){
+    // v0.3: structured output via tool use. The API parses and validates this
+    // against LEDGER_TOOL's schema — no JSON.parse, no prose-extraction, no
+    // truncation-guessing needed. This replaced the entire parsing cascade
+    // from v0.1/v0.2. See ledger-v0.3-changes.md.
+    const input = toolBlock.input;
+    parsed = {
+      stage: STAGES.some(s => s.id === input.stage) ? input.stage : currentStage,
+      reply: input.reply,
+      ledger_entries: Array.isArray(input.ledger_entries) ? input.ledger_entries : [],
+      assumptions: Array.isArray(input.assumptions) ? input.assumptions : []
+    };
+  }else{
+    // Rare fallback: the model didn't call the tool at all (or called it
+    // malformed enough that toolBlock.input.reply isn't usable). Degrade
+    // gracefully to any plain text present, same as v0.1/v0.2's approach —
+    // just a much rarer path now that tool use isn't competing with free-text
+    // JSON formatting.
+    const rawText = blocks.map(b => b.text || '').join('').trim();
+    if(!rawText){
+      throw new Error('Empty response — no tool call and no text returned.');
+    }
+    parsed = { stage: currentStage, reply: rawText, ledger_entries: [], assumptions: [] };
+    usedFallback = true;
+  }
+
+  history.push({role:'assistant', content: parsed.reply});
+  parsed._fallback = usedFallback;
+  return parsed;
+}
+
+async function handleSend(text){
+  if(!text || busy) return;
+  document.getElementById('starterRow').style.display = 'none';
+  addMessage('user', text);
+  document.getElementById('userInput').value = '';
+  setBusy(true);
+  showTyping();
+  try{
+    const parsed = await sendToLedger(text);
+    hideTyping();
+    addMessage('agent', parsed.reply, parsed.assumptions);
+    if(parsed._fallback){
+      addSystemNote("Ledger answered in plain text this turn instead of its structured format — no ledger entries logged. If this repeats, try a shorter or more specific message.");
+    }
+    if(Array.isArray(parsed.ledger_entries)){
+      const entryStage = (parsed.stage && STAGES.some(s => s.id === parsed.stage)) ? parsed.stage : currentStage;
+      const stamped = parsed.ledger_entries.map(e => Object.assign({}, e, {
+        mode: currentMode,
+        stage: entryStage,
+        timestamp: new Date().toISOString()
+      }));
+      ledgerEntries = ledgerEntries.concat(stamped);
+      renderLedger();
+    }
+    if(parsed.stage && STAGES.some(s => s.id === parsed.stage)){
+      currentStage = parsed.stage;
+      renderStageRail();
+    }
+  }catch(err){
+    hideTyping();
+    let msg;
+    if(err && err.truncated){
+      msg = err.message;
+    }else{
+      const reason = (err && err.message) ? err.message : 'unknown error';
+      msg = "Hit a real error, not just a parsing hiccup: " + reason + " — try sending again in a moment.";
+    }
+    addMessage('agent', msg);
+    console.error("Ledger error:", err);
+  }
+  setBusy(false);
+  document.getElementById('userInput').focus();
+  saveSession();
+}
+
+document.getElementById('sendBtn').addEventListener('click', () => {
+  handleSend(document.getElementById('userInput').value.trim());
+});
+document.getElementById('userInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    handleSend(document.getElementById('userInput').value.trim());
+  }
+});
+document.querySelectorAll('.starter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    handleSend(chip.getAttribute('data-idea'));
+  });
+});
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.getAttribute('data-mode')));
+});
+document.querySelectorAll('.tone-btn').forEach(btn => {
+  btn.addEventListener('click', () => setTone(btn.getAttribute('data-tone')));
+});
+document.getElementById('toneCustomizeLink').addEventListener('click', () => {
+  const row = document.getElementById('toneCustomRow');
+  const showing = row.style.display !== 'none';
+  row.style.display = showing ? 'none' : 'flex';
+  if(!showing) document.getElementById('toneCustomInput').focus();
+});
+document.getElementById('toneApplyBtn').addEventListener('click', () => {
+  applyCustomToneNote(document.getElementById('toneCustomInput').value);
+});
+document.getElementById('toneCustomInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    applyCustomToneNote(document.getElementById('toneCustomInput').value);
+  }
+});
+
+function buildExportText(){
+  const lines = [];
+  lines.push('# Ledger Session Export');
+  lines.push('');
+  lines.push('Stage: ' + currentStage + '  |  Mode: ' + currentMode);
+  lines.push('');
+  lines.push('## Conversation');
+  lines.push('');
+  sessionLog.forEach(entry => {
+    if(entry.kind === 'user'){
+      lines.push('**You:** ' + entry.text);
+    }else if(entry.kind === 'agent'){
+      lines.push('**Ledger:** ' + entry.text);
+      if(entry.assumptions && entry.assumptions.length){
+        lines.push('*Assuming: ' + entry.assumptions.join(' · ') + '*');
+      }
+    }else if(entry.kind === 'mode'){
+      lines.push('--- switched to ' + entry.mode + ' mode ---');
+    }else if(entry.kind === 'note'){
+      lines.push('--- ' + entry.text + ' ---');
+    }
+    lines.push('');
+  });
+  lines.push('## Evidence Ledger');
+  lines.push('');
+  if(ledgerEntries.length === 0){
+    lines.push('No claims logged.');
+  }else{
+    ledgerEntries.forEach(e => {
+      lines.push('- [' + e.type + ', ' + (e.mode || 'unknown') + ' mode] ' + e.claim + ' (confidence ' + e.confidence + '%, risk ' + e.risk + '%, source: ' + e.source + ')');
+    });
+  }
+  return lines.join('\n');
+}
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const text = buildExportText();
+  const blob = new Blob([text], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ledger-session-export.md';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// ---------- OKF bundle export ----------
+// Produces an Open Knowledge Format bundle: a directory of markdown files
+// with YAML frontmatter, one file per concept, linked via markdown links.
+// type/title/description/tags/timestamp are OKF's own vocabulary.
+// confidence/risk/source/mode/stage are this project's own extension fields —
+// OKF consumers are expected to tolerate unknown fields, so this is
+// intended use, not a deviation from the spec.
+
+function slugify(text, fallback){
+  const s = (text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return s || fallback;
+}
+
+function yamlString(value){
+  // minimal, safe YAML scalar quoting — escapes backslashes and double quotes
+  const escaped = String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return '"' + escaped + '"';
+}
+
+function yamlList(arr){
+  if(!arr || !arr.length) return '[]';
+  return '[' + arr.map(yamlString).join(', ') + ']';
+}
+
+function buildClaimConcept(entry, index){
+  const slug = 'claim-' + String(index + 1).padStart(2, '0') + '-' + slugify(entry.claim, 'entry');
+  const frontmatter = [
+    '---',
+    'type: claim',
+    'title: ' + yamlString(entry.claim),
+    'description: ' + yamlString(entry.claim),
+    'tags: ' + yamlList([entry.type, entry.mode, entry.stage].filter(Boolean)),
+    'timestamp: ' + yamlString(entry.timestamp || ''),
+    'confidence: ' + (Number.isFinite(entry.confidence) ? entry.confidence : 0),
+    'risk: ' + (Number.isFinite(entry.risk) ? entry.risk : 0),
+    'source: ' + yamlString(entry.source || ''),
+    '---',
+    '',
+    entry.claim,
+    '',
+    'Logged during the ' + (entry.stage || 'unknown') + ' stage, in ' + (entry.mode || 'unknown') + ' mode.'
+  ].join('\n');
+  return { path: 'claims/' + slug + '.md', content: frontmatter, slug };
+}
+
+function buildAssumptionConcept(text, index){
+  const slug = 'assumption-' + String(index + 1).padStart(2, '0') + '-' + slugify(text, 'item');
+  const frontmatter = [
+    '---',
+    'type: assumption',
+    'title: ' + yamlString(text),
+    'description: ' + yamlString(text),
+    'tags: []',
+    'timestamp: ' + yamlString(new Date().toISOString()),
+    '---',
+    '',
+    text
+  ].join('\n');
+  return { path: 'assumptions/' + slug + '.md', content: frontmatter, slug };
+}
+
+function buildOKFBundle(){
+  const claimFiles = ledgerEntries.map((e, i) => buildClaimConcept(e, i));
+
+  const assumptionTexts = [];
+  sessionLog.forEach(entry => {
+    if(entry.kind === 'agent' && entry.assumptions && entry.assumptions.length){
+      entry.assumptions.forEach(a => { if(assumptionTexts.indexOf(a) === -1) assumptionTexts.push(a); });
+    }
+  });
+  const assumptionFiles = assumptionTexts.map((a, i) => buildAssumptionConcept(a, i));
+
+  const sessionLinks = claimFiles.map(f => '- [' + f.slug + '](claims/' + f.slug + '.md)')
+    .concat(assumptionFiles.map(f => '- [' + f.slug + '](assumptions/' + f.slug + '.md)'));
+
+  const sessionFile = {
+    path: 'session.md',
+    content: [
+      '---',
+      'type: session',
+      'title: ' + yamlString('Ledger session export'),
+      'description: ' + yamlString('Stage: ' + currentStage + ', Mode: ' + currentMode),
+      'tags: ' + yamlList([currentStage, currentMode]),
+      'timestamp: ' + yamlString(new Date().toISOString()),
+      '---',
+      '',
+      '# Ledger Session',
+      '',
+      'Stage: ' + currentStage + '  |  Mode: ' + currentMode,
+      '',
+      '## Claims and assumptions in this bundle',
+      '',
+      sessionLinks.length ? sessionLinks.join('\n') : 'No claims or assumptions logged yet.'
+    ].join('\n')
+  };
+
+  return [sessionFile].concat(claimFiles.map(f => ({ path: f.path, content: f.content })), assumptionFiles.map(f => ({ path: f.path, content: f.content })));
+}
+
+document.getElementById('exportOkfBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('exportOkfBtn');
+  const originalLabel = btn.textContent;
+  try{
+    if(typeof JSZip === 'undefined'){
+      throw new Error('JSZip did not load — check network access to cdnjs.cloudflare.com');
+    }
+    const files = buildOKFBundle();
+    const zip = new JSZip();
+    files.forEach(f => zip.file(f.path, f.content));
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ledger-okf-bundle.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(err){
+    console.error('OKF export failed:', err);
+    btn.textContent = 'Export failed — see console';
+    setTimeout(() => { btn.textContent = originalLabel; }, 2500);
+  }
+});
+
+let resetArmed = false;
+document.getElementById('resetBtn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  if(!resetArmed){
+    resetArmed = true;
+    btn.textContent = 'Click again to confirm';
+    setTimeout(() => { resetArmed = false; btn.textContent = 'Reset session'; }, 2500);
+    return;
+  }
+  try{
+    await window.storage.delete('ledger-session', false);
+  }catch(err){
+    console.log('Ledger: nothing to delete, or delete failed', err);
+  }
+  location.reload();
+});
+
+(async function init(){
+  renderStageRail();
+  renderLedger();
+  updateModeUI();
+  updateToneUI();
+  const restored = await loadSession();
+  if(restored){
+    renderLedger();
+    renderStageRail();
+    updateModeUI();
+    updateToneUI();
+  }else{
+    addMessage('agent', "I run the concept → prototype → pitch pipeline, and I don't let a claim through without flagging what backs it. Give me your idea in a sentence or two — I'll push on the soft parts of the thinking before we build anything. What are we making?");
+    saveSession();
+  }
+})();
+</script>
+
+</body>
+</html>
